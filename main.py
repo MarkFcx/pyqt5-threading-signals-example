@@ -1,3 +1,14 @@
+#! python 3
+# -*- coding: utf-8 -*-
+
+# This code is heavily based on gist: https://gist.github.com/Nikola-K/8b5b510a5c85c3e207fb
+#
+# This example of using pyqtSignal and QThread has been updated to work with
+# python 3, PyQt5 and urllib.
+#
+# Modified by evereux@gmail.com
+# Created 02-Sep-2016
+
 import json
 import sys
 import time
@@ -10,8 +21,7 @@ from design import Ui_MainWindow
 
 
 class getPostsThread(QThread):
-
-    # define the signals that will be emitted from this QThread
+    # create the signals that will be emitted from this QThread
     message_to_listsubmissions = pyqtSignal(str)
     finished = pyqtSignal()
 
@@ -43,7 +53,6 @@ class getPostsThread(QThread):
                 and subreddit name from that subreddit
         :rtype: str
         """
-        print("started{}".format(subreddit))
         url = "https://www.reddit.com/r/{}.json?limit=1".format(subreddit)
         headers = {'User-Agent': 'nikolak@outlook.com tutorial code'}
         request = urllib.request.Request(url, headers=headers)
@@ -63,7 +72,6 @@ class getPostsThread(QThread):
         to the top_post variable that was set by the get_top_post function."""
         for subreddit in self.subreddits:
             top_post = self.get_top_post(subreddit)
-            print(top_post)
             self.message_to_listsubmissions.emit(top_post)
             time.sleep(2)
 
@@ -101,16 +109,11 @@ class ThreadingTutorial(QMainWindow, Ui_MainWindow):
         # instance and we pass that to the thread
         self.get_thread = getPostsThread(subreddit_list)
 
-        # self.get_thread.started.connect(self.add_post)
-
         # Next we need to connect the events from that thread to functions we want
         # to be run when those signals get fired
 
         # Adding post will be handled in the add_post method and the signal that
-        # the thread will emit is SIGNAL("add_post(QString)")
-        # the rest is the same as we can use to connect to any signal
-
-        # self.connect(self.get_thread, pyqtSignal("add_post(QString)"), self.add_post)
+        # the thread will emit is message_to_listsubmissions(top_post)
         self.get_thread.message_to_listsubmissions.connect(self.add_post)
 
         # This is pretty self explanatory
@@ -119,7 +122,6 @@ class ThreadingTutorial(QMainWindow, Ui_MainWindow):
         # and regardless of whether it was terminated or finished by itself
         # the finished signal will go off. So we don't need to catch the terminated one
         # specically, but we could if we wanted.
-        # self.connect(self.get_thread, pyqtSignal("finished()"), self.done)
         self.get_thread.finished.connect(self.done)
 
         # we have all the events we need connected we can start the thread
@@ -164,6 +166,4 @@ class ThreadingTutorial(QMainWindow, Ui_MainWindow):
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     form = ThreadingTutorial()
-    app.exec_()
-
     sys.exit(app.exec_())
